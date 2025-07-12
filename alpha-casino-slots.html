@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha Casino - Spin Your Tasks!</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Oswald', sans-serif;
+            background: linear-gradient(135deg, #1a0f1f 0%, #2d1b3d 50%, #1a0f1f 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, #ff006633 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, #ffd70033 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, #ff006611 0%, transparent 50%);
+            pointer-events: none;
+            animation: ambientGlow 20s ease-in-out infinite;
+        }
+        
+        @keyframes ambientGlow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.8; }
+        }
+        
+        .casino-header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .casino-title {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 4rem;
+            background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 
+                0 0 30px rgba(255, 215, 0, 0.5),
+                0 0 60px rgba(255, 215, 0, 0.3);
+            letter-spacing: 4px;
+            animation: titleGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes titleGlow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+        }
+        
+        .subtitle {
+            color: #ffd700;
+            font-size: 1.2rem;
+            margin-top: -10px;
+            letter-spacing: 2px;
+        }
+        
+        .slot-machine-container {
+            background: linear-gradient(145deg, #2a1a3a, #1a0f2f);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.6),
+                inset 0 2px 10px rgba(255, 215, 0, 0.1);
+            position: relative;
+            max-width: 600px;
+            width: 90%;
+        }
+        
+        .slot-machine-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ffd700, #ff6b6b, #4ecdc4, #ffd700);
+            border-radius: 20px;
+            z-index: -1;
+            opacity: 0.6;
+            animation: borderRotate 4s linear infinite;
+            background-size: 300% 300%;
+        }
+        
+        @keyframes borderRotate {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .slot-window {
+            background: #0a0a0a;
+            border-radius: 15px;
+            padding: 30px 20px;
+            box-shadow: 
+                inset 0 5px 15px rgba(0, 0, 0, 0.8),
+                0 0 20px rgba(255, 215, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .reels-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            height: 200px;
+            position: relative;
+        }
+        
+        .reel {
+            width: 120px;
+            height: 200px;
+            background: linear-gradient(180deg, #1a1a1a, #2a2a2a);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .reel-strip {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            transition: transform 0.1s linear;
+        }
+        
+        .symbol {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            background: linear-gradient(180deg, #2a2a2a, #1a1a1a);
+            border-bottom: 2px solid #333;
+        }
+        
+        .spinning {
+            animation: spin 0.1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: translateY(0); }
+            to { transform: translateY(-200px); }
+        }
+        
+        .controls {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .spin-button {
+            background: linear-gradient(145deg, #ff4757, #c41e3a);
+            color: white;
+            border: none;
+            padding: 20px 60px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 
+                0 10px 30px rgba(255, 71, 87, 0.4),
+                inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .spin-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .spin-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .spin-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 15px 40px rgba(255, 71, 87, 0.5),
+                inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+        }
+        
+        .spin-button:active {
+            transform: translateY(0);
+        }
+        
+        .spin-button:disabled {
+            background: linear-gradient(145deg, #666, #444);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .result-display {
+            margin-top: 30px;
+            text-align: center;
+            min-height: 60px;
+            position: relative;
+        }
+        
+        .task-result {
+            font-size: 1.6rem;
+            color: #ffd700;
+            font-weight: bold;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s forwards;
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .win-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ffd700;
+            animation: confettiFall 3s linear forwards;
+        }
+        
+        @keyframes confettiFall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .celebration-text {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 4rem;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 
+                0 0 30px rgba(255, 215, 0, 0.8),
+                0 0 60px rgba(255, 215, 0, 0.4);
+            animation: celebrationPop 1s ease-out forwards;
+            z-index: 1001;
+        }
+        
+        @keyframes celebrationPop {
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0;
+            }
+        }
+        
+        .scorecard {
+            position: fixed;
+            right: -400px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(145deg, #2a1a3a, #1a0f2f);
+            border-radius: 20px 0 0 20px;
+            padding: 30px;
+            width: 350px;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+            transition: right 0.3s ease;
+            z-index: 100;
+        }
+        
+        .scorecard.active {
+            right: 0;
+        }
+        
+        .scorecard h3 {
+            color: #ffd700;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .scorecard-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 3px solid #ffd700;
+        }
+        
+        .toggle-scorecard {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            background: linear-gradient(145deg, #ffd700, #ffed4e);
+            color: #1a0f1f;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            z-index: 101;
+        }
+        
+        .toggle-scorecard:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        }
+        
+        .settings-panel {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            z-index: 101;
+        }
+        
+        .settings-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffd700;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+        
+        .settings-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(180deg);
+        }
+        
+        @media (max-width: 768px) {
+            .casino-title {
+                font-size: 3rem;
+            }
+            
+            .slot-machine-container {
+                padding: 20px;
+            }
+            
+            .reel {
+                width: 90px;
+            }
+            
+            .symbol {
+                font-size: 3rem;
+            }
+            
+            .spin-button {
+                padding: 15px 40px;
+                font-size: 1.4rem;
+            }
+            
+            .scorecard {
+                width: 280px;
+            }
+        }
+        
+        .flash-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.8), transparent);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 999;
+        }
+        
+        .flash-overlay.active {
+            animation: flash 0.5s ease-out;
+        }
+        
+        @keyframes flash {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-panel">
+        <button class="settings-button" onclick="toggleSettings()">⚙️</button>
+    </div>
+    
+    <button class="toggle-scorecard" onclick="toggleScorecard()">📊 Scorecard</button>
+    
+    <div class="casino-header">
+        <h1 class="casino-title">ALPHA CASINO</h1>
+        <p class="subtitle">Spin to Win Your Tasks!</p>
+    </div>
+    
+    <div class="slot-machine-container">
+        <div class="slot-window">
+            <div class="reels-container">
+                <div class="reel" id="reel1">
+                    <div class="reel-strip"></div>
+                </div>
+                <div class="reel" id="reel2">
+                    <div class="reel-strip"></div>
+                </div>
+                <div class="reel" id="reel3">
+                    <div class="reel-strip"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="spin-button" id="spinButton" onclick="spin()">SPIN</button>
+        </div>
+        
+        <div class="result-display" id="resultDisplay"></div>
+    </div>
+    
+    <div class="scorecard" id="scorecard">
+        <h3>Task Combinations</h3>
+        <div class="scorecard-item">
+            <strong>🧹🧹🧹</strong> - Deep clean entire house
+        </div>
+        <div class="scorecard-item">
+            <strong>🛒🛒🛒</strong> - Major grocery shopping
+        </div>
+        <div class="scorecard-item">
+            <strong>🔧🔧🔧</strong> - Fix something major
+        </div>
+        <div class="scorecard-item">
+            <strong>📚📚📚</strong> - Organize entire room
+        </div>
+        <div class="scorecard-item">
+            <strong>🌱🌱🌱</strong> - Garden work
+        </div>
+        <div class="scorecard-item">
+            <strong>Mixed symbols</strong> - Quick 5-minute task
+        </div>
+    </div>
+    
+    <div class="win-animation" id="winAnimation"></div>
+    <div class="flash-overlay" id="flashOverlay"></div>
+    
+    <audio id="spinSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSGH0fPTgjMGHm7A7+OZURE" type="audio/wav">
+    </audio>
+    
+    <script>
+        const symbols = ['🧹', '🛒', '🔧', '📚', '🌱', '🍳', '🧺', '🗑️'];
+        const tasks = {
+            '🧹🧹🧹': 'Deep clean the entire house!',
+            '🛒🛒🛒': 'Time for major grocery shopping!',
+            '🔧🔧🔧': 'Fix that thing you\'ve been putting off!',
+            '📚📚📚': 'Organize and declutter a whole room!',
+            '🌱🌱🌱': 'Tend to the garden or plants!',
+            '🍳🍳🍳': 'Cook a special meal for the family!',
+            '🧺🧺🧺': 'Do all the laundry!',
+            '🗑️🗑️🗑️': 'Take out all trash and recycling!'
+        };
+        
+        const quickTasks = [
+            'Wipe down kitchen counters',
+            'Vacuum the living room',
+            'Load/unload dishwasher',
+            'Take out the trash',
+            'Make the bed',
+            'Water the plants',
+            'Sort the mail',
+            'Clean the bathroom mirror',
+            'Sweep the floor',
+            'Organize your desk'
+        ];
+        
+        let isSpinning = false;
+        let soundEnabled = true;
+        
+        function initializeReels() {
+            const reels = document.querySelectorAll('.reel-strip');
+            reels.forEach(reel => {
+                // Create multiple copies of symbols for smooth infinite scroll
+                for (let i = 0; i < 20; i++) {
+                    symbols.forEach(symbol => {
+                        const div = document.createElement('div');
+                        div.className = 'symbol';
+                        div.textContent = symbol;
+                        reel.appendChild(div);
+                    });
+                }
+            });
+        }
+        
+        function spin() {
+            if (isSpinning) return;
+            
+            isSpinning = true;
+            const button = document.getElementById('spinButton');
+            button.disabled = true;
+            
+            // Play sound if enabled
+            if (soundEnabled) {
+                const audio = document.getElementById('spinSound');
+                audio.play().catch(e => console.log('Audio play failed:', e));
+            }
+            
+            // Clear previous result
+            document.getElementById('resultDisplay').innerHTML = '';
+            
+            // Start spinning animation
+            const reels = document.querySelectorAll('.reel-strip');
+            reels.forEach((reel, index) => {
+                reel.classList.add('spinning');
+                
+                // Stop each reel at different times
+                setTimeout(() => {
+                    reel.classList.remove('spinning');
+                    
+                    // Random position
+                    const randomPosition = Math.floor(Math.random() * symbols.length) * 200;
+                    reel.style.transform = `translateY(-${randomPosition}px)`;
+                    
+                    // Check for win after all reels stop
+                    if (index === reels.length - 1) {
+                        setTimeout(() => {
+                            checkWin();
+                            button.disabled = false;
+                            isSpinning = false;
+                        }, 300);
+                    }
+                }, 1000 + (index * 500));
+            });
+        }
+        
+        function checkWin() {
+            const reels = document.querySelectorAll('.reel-strip');
+            const results = [];
+            
+            reels.forEach(reel => {
+                const position = parseInt(reel.style.transform.match(/-?\d+/)?.[0] || 0);
+                const symbolIndex = Math.abs(position / 200) % symbols.length;
+                results.push(symbols[Math.floor(symbolIndex)]);
+            });
+            
+            const resultKey = results.join('');
+            let task = '';
+            let isJackpot = false;
+            
+            if (tasks[resultKey]) {
+                task = tasks[resultKey];
+                isJackpot = true;
+                triggerWinAnimation();
+            } else {
+                task = quickTasks[Math.floor(Math.random() * quickTasks.length)];
+            }
+            
+            displayResult(task, isJackpot);
+        }
+        
+        function displayResult(task, isJackpot) {
+            const display = document.getElementById('resultDisplay');
+            display.innerHTML = `<div class="task-result">${isJackpot ? '🎉 JACKPOT! 🎉<br>' : ''}Your task: ${task}</div>`;
+        }
+        
+        function triggerWinAnimation() {
+            // Flash effect
+            const flash = document.getElementById('flashOverlay');
+            flash.classList.add('active');
+            setTimeout(() => flash.classList.remove('active'), 500);
+            
+            // Celebration text
+            const celebText = document.createElement('div');
+            celebText.className = 'celebration-text';
+            celebText.textContent = 'WINNER!';
+            document.body.appendChild(celebText);
+            setTimeout(() => celebText.remove(), 1000);
+            
+            // Confetti
+            createConfetti();
+            
+            // Screen shake
+            document.querySelector('.slot-machine-container').style.animation = 'shake 0.5s';
+            setTimeout(() => {
+                document.querySelector('.slot-machine-container').style.animation = '';
+            }, 500);
+        }
+        
+        function createConfetti() {
+            const container = document.getElementById('winAnimation');
+            const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#f39c12', '#e74c3c'];
+            
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    container.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 20);
+            }
+        }
+        
+        function toggleScorecard() {
+            const scorecard = document.getElementById('scorecard');
+            scorecard.classList.toggle('active');
+        }
+        
+        function toggleSettings() {
+            soundEnabled = !soundEnabled;
+            alert(`Sound effects ${soundEnabled ? 'enabled' : 'disabled'}`);
+        }
+        
+        // Add shake animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-10px); }
+                75% { transform: translateX(10px); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Initialize on load
+        initializeReels();
+        
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !isSpinning) {
+                e.preventDefault();
+                spin();
+            }
+        });
+    </script>
+</body>
+</html>
