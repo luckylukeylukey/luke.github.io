@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha Casino - Where You Always Pay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ===== RESET & BASE STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #111111 0%, #1a1a1a 50%, #111111 100%);
+            min-height: 100vh;
+            color: #f5f5f5;
+            overflow-x: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Animated background pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+            animation: subtleGlow 8s ease-in-out infinite;
+        }
+
+        @keyframes subtleGlow {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        /* ===== HEADER ===== */
+        .casino-header {
+            text-align: center;
+            padding: 2rem 1rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .casino-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            font-weight: 900;
+            color: #d4af37;
+            letter-spacing: 0.3rem;
+            text-shadow: 
+                0 0 20px rgba(212, 175, 55, 0.5),
+                0 4px 8px rgba(0, 0, 0, 0.8);
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .casino-logo::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #d4af37, transparent);
+            opacity: 0.6;
+        }
+
+        .casino-subtitle {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 300;
+            color: #ff6b6b;
+            letter-spacing: 0.2rem;
+            text-transform: uppercase;
+            opacity: 0.9;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+            flex: 1;
+            justify-content: center;
+        }
+
+        /* ===== SLOT MACHINE ===== */
+        .slot-machine {
+            background: linear-gradient(145deg, #1a1a1a, #111111);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.8),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 0 40px rgba(212, 175, 55, 0.1);
+            position: relative;
+            max-width: 900px;
+            width: 100%;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .machine-frame {
+            background: #0a0a0a;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 
+                inset 0 4px 12px rgba(0, 0, 0, 0.9),
+                0 0 20px rgba(212, 175, 55, 0.1);
+            position: relative;
+            border: 2px solid #333;
+        }
+
+        /* ===== REELS ===== */
+        .reels-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            justify-content: center;
+            position: relative;
+        }
+
+        .reel {
+            width: 120px;
+            height: 150px;
+            background: linear-gradient(180deg, #1a1a1a, #111111);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid #333;
+            box-shadow: 
+                inset 0 2px 8px rgba(0, 0, 0, 0.8),
+                0 0 10px rgba(212, 175, 55, 0.1);
+        }
+
+        .reel-strip {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease-out;
+        }
+
+        .symbol {
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            background: linear-gradient(180deg, #222, #111);
+            border-bottom: 1px solid #333;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+
+        .symbol.winning {
+            background: linear-gradient(180deg, #d4af37, #b8941f);
+            box-shadow: 
+                0 0 20px rgba(212, 175, 55, 0.8),
+                inset 0 0 20px rgba(255, 255, 255, 0.2);
+            animation: symbolGlow 1s ease-in-out;
+        }
+
+        .symbol.losing {
+            background: linear-gradient(180deg, #ff6b6b, #e74c3c);
+            box-shadow: 
+                0 0 20px rgba(255, 107, 107, 0.8),
+                inset 0 0 20px rgba(255, 255, 255, 0.2);
+            animation: symbolPulse 1s ease-in-out;
+        }
+
+        @keyframes symbolGlow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes symbolPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+        }
+
+        /* Spinning animation */
+        .reel-strip.spinning {
+            animation: reelSpin 0.05s linear infinite;
+        }
+
+        @keyframes reelSpin {
+            from { transform: translateY(0); }
+            to { transform: translateY(-150px); }
+        }
+
+        /* ===== GAME CONTROLS ===== */
+        .game-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .balance-section {
+            display: flex;
+            gap: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .balance-display,
+        .debt-display {
+            text-align: center;
+            background: rgba(212, 175, 55, 0.1);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .debt-display {
+            background: rgba(255, 107, 107, 0.1);
+            border-color: rgba(255, 107, 107, 0.3);
+        }
+
+        .balance-display .label,
+        .debt-display .label {
+            display: block;
+            font-size: 0.9rem;
+            color: #d4af37;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .debt-display .label {
+            color: #ff6b6b;
+        }
+
+        .balance-display .amount,
+        .debt-display .amount {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f5f5f5;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Spin Button */
+        .spin-btn {
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(145deg, #d4af37, #b8941f);
+            border: 4px solid #ffd700;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 8px 25px rgba(212, 175, 55, 0.4),
+                inset 0 2px 5px rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .spin-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.4s ease;
+        }
+
+        .spin-btn:hover::before {
+            width: 200px;
+            height: 200px;
+        }
+
+        .spin-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 
+                0 12px 35px rgba(212, 175, 55, 0.5),
+                inset 0 2px 5px rgba(255, 255, 255, 0.3);
+        }
+
+        .spin-btn:active {
+            transform: translateY(-1px) scale(1.02);
+        }
+
+        .spin-btn:disabled {
+            background: linear-gradient(145deg, #666, #555);
+            border-color: #777;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .spin-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #111;
+            text-transform: uppercase;
+            letter-spacing: 0.1rem;
+            z-index: 1;
+        }
+
+        .spin-icon {
+            font-size: 2rem;
+            color: #111;
+            z-index: 1;
+            margin-top: 0.2rem;
+        }
+
+        .spin-btn.spinning .spin-icon {
+            animation: spinRotate 0.5s linear infinite;
+        }
+
+        @keyframes spinRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Message Bar */
+        .message-bar {
+            text-align: center;
+            margin-top: 1rem;
+            min-height: 3rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #game-message {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #d4af37;
+            text-transform: uppercase;
+            letter-spacing: 0.1rem;
+            line-height: 1.4;
+        }
+
+        /* ===== SPECIAL OVERLAYS ===== */
+        .dare-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dare-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .dare-content {
+            text-align: center;
+            background: linear-gradient(145deg, #1a1a1a, #111111);
+            padding: 3rem;
+            border-radius: 20px;
+            border: 3px solid #ff6b6b;
+            box-shadow: 0 0 50px rgba(255, 107, 107, 0.5);
+            max-width: 600px;
+            margin: 1rem;
+        }
+
+        .dare-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: #ff6b6b;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+        }
+
+        .dare-text {
+            font-size: 1.3rem;
+            color: #f5f5f5;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+
+        .dare-dismiss {
+            background: linear-gradient(145deg, #ff6b6b, #e74c3c);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .dare-dismiss:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        /* ===== RULES PANEL ===== */
+        .rules-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 100;
+        }
+
+        .toggle-btn {
+            background: rgba(26, 26, 26, 0.9);
+            border: 2px solid #d4af37;
+            color: #d4af37;
+            padding: 0.8rem 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .toggle-btn:hover {
+            background: rgba(212, 175, 55, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .rules-panel {
+            position: fixed;
+            top: 50%;
+            right: -400px;
+            transform: translateY(-50%);
+            width: 350px;
+            background: linear-gradient(145deg, #1a1a1a, #111111);
+            border-radius: 20px 0 0 20px;
+            padding: 2rem;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.8);
+            transition: right 0.3s ease;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            z-index: 99;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .rules-panel.active {
+            right: 0;
+        }
+
+        .rules-panel h3 {
+            font-family: 'Playfair Display', serif;
+            color: #d4af37;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .rules-section {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 3px solid #d4af37;
+        }
+
+        .rules-section h4 {
+            color: #ff6b6b;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .rules-section p {
+            font-size: 0.95rem;
+            line-height: 1.4;
+            color: #f5f5f5;
+        }
+
+        /* ===== FOOTER ===== */
+        .casino-footer {
+            text-align: center;
+            padding: 2rem;
+            color: rgba(245, 245, 245, 0.6);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: auto;
+        }
+
+        /* ===== RESPONSIVE DESIGN ===== */
+        @media (max-width: 768px) {
+            .casino-logo {
+                font-size: 2.5rem;
+                letter-spacing: 0.2rem;
+            }
+            
+            .slot-machine {
+                padding: 2rem 1rem;
+                margin: 1rem;
+            }
+            
+            .machine-frame {
+                padding: 1.5rem 1rem;
+            }
+            
+            .reels-container {
+                gap: 0.5rem;
+            }
+            
+            .reel {
+                width: 60px;
+                height: 80px;
+            }
+            
+            .symbol {
+                height: 80px;
+                font-size: 2rem;
+            }
+            
+            .balance-section {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .spin-btn {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .rules-panel {
+                width: 280px;
+            }
+            
+            .rules-toggle {
+                top: 1rem;
+                right: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="rules-toggle">
+        <button class="toggle-btn" onclick="toggleRules()">📋 Rules</button>
+    </div>
+
+    <header class="casino-header">
+        <h1 class="casino-logo">ALPHA CASINO</h1>
+        <p class="casino-subtitle">Where You Always Pay to Play</p>
+    </header>
+
+    <main class="main-content">
+        <section class="slot-machine" id="slot-machine">
+            <div class="machine-frame">
+                <div class="reels-container" id="reels-container">
+                    <div class="reel" id="reel-1">
+                        <div class="reel-strip" data-reel="1"></div>
+                    </div>
+                    <div class="reel" id="reel-2">
+                        <div class="reel-strip" data-reel="2"></div>
+                    </div>
+                    <div class="reel" id="reel-3">
+                        <div class="reel-strip" data-reel="3"></div>
+                    </div>
+                    <div class="reel" id="reel-4">
+                        <div class="reel-strip" data-reel="4"></div>
+                    </div>
+                    <div class="reel" id="reel-5">
+                        <div class="reel-strip" data-reel="5"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-controls">
+                <div class="balance-section">
+                    <div class="balance-display">
+                        <span class="label">Balance</span>
+                        <span class="amount" id="balance">$500</span>
+                    </div>
+                    <div class="debt-display">
+                        <span class="label">Total Debt</span>
+                        <span class="amount" id="debt">$0</span>
+                    </div>
+                </div>
+
+                <button class="spin-btn" id="spin-button">
+                    <span class="spin-text">SPIN</span>
+                    <div class="spin-icon">⟲</div>
+                </button>
+            </div>
+
+            <div class="message-bar" id="message-bar">
+                <span id="game-message">Ready to lose money?</span>
+            </div>
+        </section>
+    </main>
+
+    <div class="rules-panel" id="rules-panel">
+        <h3>How This Works</h3>
+        
+        <div class="rules-section">
+            <h4>🎰 The Reverse Casino</h4>
+            <p>This isn't your typical casino. Here, most spins cost YOU money instead of paying out. The more uncommon the result, the more you owe!</p>
+        </div>
+        
+        <div class="rules-section">
+            <h4>💸 Debt System</h4>
+            <p>• Random results: $5-$20 debt<br>
+            • Two pairs: $25-$40 debt<br>
+            • Three of a kind: $45-$75 debt<br>
+            • Rare combos: $80-$100 debt</p>
+        </div>
+        
+        <div class="rules-section">
+            <h4>🎭 Special Prizes</h4>
+            <p>Very rare combinations unlock "special prizes" - humiliating dares instead of money. These are the only "wins" in this reverse casino!</p>
+        </div>
+        
+        <div class="rules-section">
+            <h4>🎯 Symbols</h4>
+            <p><strong>Money Tier (Common):</strong><br>
+            🤑 Money Face, 💰 Money Bag, 💸 Flying Cash, 💲 Dollar Sign, 💳 Credit Card<br><br>
+            <strong>Luxury Tier (Uncommon):</strong><br>
+            💎 Diamond, 🔷 Blue Diamond, 📦 Gold Bar, 💍 Ring<br><br>
+            <strong>Casino Tier (Rare):</strong><br>
+            🎰 Slot Machine, 🎲 Dice, 🃏 Playing Card<br><br>
+            <strong>Premium Tier (Very Rare):</strong><br>
+            👑 Crown, ⭐ Star<br><br>
+            <strong>Ultimate Tier (Ultra Rare):</strong><br>
+            Α Alpha Symbol</p>
+        </div>
+    </div>
+
+    <div class="dare-overlay" id="dare-overlay">
+        <div class="dare-content">
+            <h2 class="dare-title">SPECIAL PRIZE!</h2>
+            <p class="dare-text" id="dare-text"></p>
+            <button class="dare-dismiss" onclick="dismissDare()">Accept Your Fate</button>
+        </div>
+    </div>
+
+    <footer class="casino-footer">
+        <p>&copy; 2025 Alpha Casino. You always lose here. Play irresponsibly.</p>
+    </footer>
+
+    <script>
+        // ===== GAME CONFIGURATION =====
+        const GAME_CONFIG = {
+            symbols: ['🤑', '💰', '💸', '💲', '💳', '💎', '🔷', '📦', '👑', '🎰', '🎲', '🃏', '💍', '⭐', 'Α'],
+            symbolWeights: {
+                // Money-themed symbols (most common)
+                '🤑': 15,    // Money face
+                '💰': 15,    // Money bag
+                '💸': 12,    // Money with wings
+                '💲': 12,    // Dollar sign
+                '💳': 10,    // Credit card
+                
+                // Luxury symbols (common)
+                '💎': 8,     // Diamond
+                '🔷': 8,     // Blue diamond
+                '📦': 7,     // Package/gold bar
+                '💍': 6,     // Ring
+                
+                // Casino symbols (uncommon)
+                '🎰': 5,     // Slot machine
+                '🎲': 4,     // Dice
+                '🃏': 4,     // Playing card
+                
+                // Premium symbols (rare)
+                '👑': 3,     // Crown
+                '⭐': 2,     // Star
+                
+                // Ultimate symbol (ultra rare)
+                'Α': 1       // Alpha symbol
+            },
+            
+            // Debt amounts based on combination rarity (reverse casino!)
+            debtTable: {
+                // No matches - small debt
+                'no_match': [5, 8, 12, 15, 20],
+                
+                // Two pairs - medium debt
+                'two_pair': [25, 30, 35, 40],
+                
+                // Three of a kind - higher debt
+                'three_kind': [45, 55, 65, 75],
+                
+                // Four of a kind - high debt
+                'four_kind': [80, 90, 100],
+                
+                // Full house - high debt
+                'full_house': [85, 95],
+                
+                // Five of a kind gets special prizes instead!
+                'five_kind': 'DARE'
+            },
+            
+            // Humiliating dares for rare "wins"
+            dareTable: [
+                "Post a selfie making the most ridiculous face you can manage with the caption 'I lost at Alpha Casino and this is my winner's face!'",
+                "Send a voice message to your group chat singing 'Happy Birthday' to yourself in the most dramatic way possible.",
+                "Change your profile picture to a drawing you make with your non-dominant hand for 24 hours.",
+                "Text someone you haven't talked to in months and say 'I just wanted you to know that you're probably thinking about me right now.'",
+                "Record yourself doing a 30-second interpretive dance about your day and post it to your story.",
+                "Eat your next meal using only a spoon, even if it's pizza or a sandwich.",
+                "Speak in rhymes for the next hour, no matter who you're talking to.",
+                "Write and perform a 2-minute dramatic monologue about why socks disappear in the laundry.",
+                "Call a local business and ask if they sell 'left-handed screwdrivers' in complete seriousness.",
+                "Wear mismatched shoes for the entire day tomorrow (bonus points if you have to go somewhere important)."
+            ],
+            
+            initialBalance: 500,
+            spinCost: 10,
+            symbolHeight: window.innerWidth <= 480 ? 80 : window.innerWidth <= 768 ? 80 : 150,
+            spinDuration: 1500,
+            reelStopDelay: 200
+        };
+
+        // ===== GAME STATE =====
+        class GameState {
+            constructor() {
+                this.balance = GAME_CONFIG.initialBalance;
+                this.totalDebt = 0;
+                this.isSpinning = false;
+                this.spinsCount = 0;
+            }
+
+            canSpin() {
+                return this.balance >= GAME_CONFIG.spinCost && !this.isSpinning;
+            }
+
+            spin() {
+                if (this.canSpin()) {
+                    this.balance -= GAME_CONFIG.spinCost;
+                    this.spinsCount++;
+                    return true;
+                }
+                return false;
+            }
+
+            addDebt(amount) {
+                this.totalDebt += amount;
+            }
+        }
+
+        // ===== SYMBOL GENERATOR =====
+        class SymbolGenerator {
+            static getRandomSymbol() {
+                const totalWeight = Object.values(GAME_CONFIG.symbolWeights).reduce((sum, weight) => sum + weight, 0);
+                let random = Math.random() * totalWeight;
+                
+                for (const [symbol, weight] of Object.entries(GAME_CONFIG.symbolWeights)) {
+                    random -= weight;
+                    if (random <= 0) {
+                        return symbol;
+                    }
+                }
+                
+                return GAME_CONFIG.symbols[0]; // Fallback
+            }
+
+            static generateReelStrip() {
+                const strip = [];
+                // Generate enough symbols for smooth scrolling
+                for (let i = 0; i < 50; i++) {
+                    strip.push(this.getRandomSymbol());
+                }
+                return strip;
+            }
+        }
+
+        // ===== REEL MANAGER =====
+        class ReelManager {
+            constructor() {
+                this.reels = [];
+                this.initializeReels();
+            }
+
+            initializeReels() {
+                for (let i = 1; i <= 5; i++) {
+                    const reelElement = document.querySelector(`[data-reel="${i}"]`);
+                    const reel = {
+                        element: reelElement,
+                        strip: SymbolGenerator.generateReelStrip(),
+                        currentPosition: 0,
+                        finalSymbol: null
+                    };
+                    
+                    this.populateReel(reel);
+                    this.reels.push(reel);
+                }
+            }
+
+            populateReel(reel) {
+                reel.element.innerHTML = '';
+                reel.strip.forEach(symbol => {
+                    const symbolElement = document.createElement('div');
+                    symbolElement.className = 'symbol';
+                    symbolElement.textContent = symbol;
+                    reel.element.appendChild(symbolElement);
+                });
+            }
+
+            spin(onComplete) {
+                const results = [];
+                let completedReels = 0;
+
+                this.reels.forEach((reel, index) => {
+                    // Start spinning animation
+                    reel.element.classList.add('spinning');
+                    
+                    // Generate final symbol for this reel
+                    reel.finalSymbol = SymbolGenerator.getRandomSymbol();
+                    results.push(reel.finalSymbol);
+
+                    // Stop reel after delay
+                    setTimeout(() => {
+                        this.stopReel(reel, () => {
+                            completedReels++;
+                            if (completedReels === this.reels.length) {
+                                setTimeout(() => onComplete(results), 500);
+                            }
+                        });
+                    }, GAME_CONFIG.spinDuration + (index * GAME_CONFIG.reelStopDelay));
+                });
+            }
+
+            stopReel(reel, callback) {
+                reel.element.classList.remove('spinning');
+                
+                // Find position to show the final symbol
+                const symbolIndex = reel.strip.findIndex(symbol => symbol === reel.finalSymbol);
+                const position = symbolIndex * GAME_CONFIG.symbolHeight;
+                
+                // Ensure we land exactly on a symbol
+                reel.element.style.transform = `translateY(-${position}px)`;
+                reel.currentPosition = position;
+                
+                // Update the visible symbol
+                const visibleSymbolElement = reel.element.children[symbolIndex];
+                if (visibleSymbolElement) {
+                    visibleSymbolElement.textContent = reel.finalSymbol;
+                }
+                
+                callback();
+            }
+
+            highlightSymbols(positions, isWin = false) {
+                this.clearHighlights();
+                
+                positions.forEach(position => {
+                    const reel = this.reels[position];
+                    const visibleSymbolIndex = Math.floor(reel.currentPosition / GAME_CONFIG.symbolHeight);
+                    const symbolElement = reel.element.children[visibleSymbolIndex];
+                    if (symbolElement) {
+                        symbolElement.classList.add(isWin ? 'winning' : 'losing');
+                        setTimeout(() => {
+                            symbolElement.classList.remove(isWin ? 'winning' : 'losing');
+                        }, 3000);
+                    }
+                });
+            }
+
+            clearHighlights() {
+                this.reels.forEach(reel => {
+                    Array.from(reel.element.children).forEach(symbol => {
+                        symbol.classList.remove('winning', 'losing');
+                    });
+                });
+            }
+        }
+
+        // ===== RESULT CALCULATOR =====
+        class ResultCalculator {
+            static analyzeResult(symbols) {
+                const symbolCounts = {};
+                symbols.forEach(symbol => {
+                    symbolCounts[symbol] = (symbolCounts[symbol] || 0) + 1;
+                });
+
+                const counts = Object.values(symbolCounts);
+                const maxCount = Math.max(...counts);
+                const uniqueSymbols = Object.keys(symbolCounts).length;
+
+                // Check for five of a kind (DARE!)
+                if (maxCount === 5) {
+                    return {
+                        type: 'five_kind',
+                        isDare: true,
+                        positions: [0, 1, 2, 3, 4],
+                        message: 'JACKPOT! Time for a special prize...'
+                    };
+                }
+
+                // Check for four of a kind
+                if (maxCount === 4) {
+                    const positions = this.getMatchingPositions(symbols, maxCount);
+                    return {
+                        type: 'four_kind',
+                        isDare: false,
+                        positions: positions,
+                        message: 'Four of a kind! Big debt incoming...'
+                    };
+                }
+
+                // Check for full house (3 + 2)
+                if (maxCount === 3 && uniqueSymbols === 2) {
+                    return {
+                        type: 'full_house',
+                        isDare: false,
+                        positions: [0, 1, 2, 3, 4],
+                        message: 'Full house! That\'s expensive...'
+                    };
+                }
+
+                // Check for three of a kind
+                if (maxCount === 3) {
+                    const positions = this.getMatchingPositions(symbols, maxCount);
+                    return {
+                        type: 'three_kind',
+                        isDare: false,
+                        positions: positions,
+                        message: 'Three of a kind! You owe us...'
+                    };
+                }
+
+                // Check for two pairs
+                if (counts.filter(count => count === 2).length === 2) {
+                    return {
+                        type: 'two_pair',
+                        isDare: false,
+                        positions: [0, 1, 2, 3, 4],
+                        message: 'Two pairs! Pay up!'
+                    };
+                }
+
+                // No significant matches
+                return {
+                    type: 'no_match',
+                    isDare: false,
+                    positions: [],
+                    message: 'No matches! Still costs you though...'
+                };
+            }
+
+            static getMatchingPositions(symbols, targetCount) {
+                const symbolCounts = {};
+                const positions = {};
+                
+                symbols.forEach((symbol, index) => {
+                    if (!symbolCounts[symbol]) {
+                        symbolCounts[symbol] = 0;
+                        positions[symbol] = [];
+                    }
+                    symbolCounts[symbol]++;
+                    positions[symbol].push(index);
+                });
+
+                // Find the symbol with the target count
+                for (const [symbol, count] of Object.entries(symbolCounts)) {
+                    if (count === targetCount) {
+                        return positions[symbol];
+                    }
+                }
+                
+                return [];
+            }
+
+            static calculateDebt(resultType) {
+                const debtOptions = GAME_CONFIG.debtTable[resultType];
+                if (Array.isArray(debtOptions)) {
+                    return debtOptions[Math.floor(Math.random() * debtOptions.length)];
+                }
+                return 0;
+            }
+
+            static getRandomDare() {
+                const dares = GAME_CONFIG.dareTable;
+                return dares[Math.floor(Math.random() * dares.length)];
+            }
+        }
+
+        // ===== UI MANAGER =====
+        class UIManager {
+            constructor(gameState) {
+                this.gameState = gameState;
+                this.elements = {
+                    balance: document.getElementById('balance'),
+                    debt: document.getElementById('debt'),
+                    spinButton: document.getElementById('spin-button'),
+                    gameMessage: document.getElementById('game-message'),
+                    dareOverlay: document.getElementById('dare-overlay'),
+                    dareText: document.getElementById('dare-text'),
+                    rulesPanel: document.getElementById('rules-panel')
+                };
+                
+                this.initializeEventListeners();
+                this.updateDisplay();
+            }
+
+            initializeEventListeners() {
+                this.elements.spinButton.addEventListener('click', () => this.handleSpin());
+                
+                // Keyboard support
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space' && !this.gameState.isSpinning) {
+                        e.preventDefault();
+                        this.handleSpin();
+                    }
+                });
+            }
+
+            updateDisplay() {
+                this.elements.balance.textContent = `${this.gameState.balance}`;
+                this.elements.debt.textContent = `${this.gameState.totalDebt}`;
+                
+                // Update button state
+                this.elements.spinButton.disabled = !this.gameState.canSpin();
+                
+                // Update message based on game state
+                if (this.gameState.balance < GAME_CONFIG.spinCost) {
+                    this.setMessage('Out of money! Game over... for now.');
+                } else if (!this.gameState.isSpinning) {
+                    this.setMessage('Ready to lose more money?');
+                }
+            }
+
+            handleSpin() {
+                if (!this.gameState.canSpin()) return;
+                
+                if (window.reverseSlotGame) {
+                    window.reverseSlotGame.spin();
+                }
+            }
+
+            setSpinning(spinning) {
+                this.gameState.isSpinning = spinning;
+                this.elements.spinButton.disabled = spinning;
+                
+                if (spinning) {
+                    this.elements.spinButton.classList.add('spinning');
+                    this.setMessage('Spinning... preparing your debt...');
+                } else {
+                    this.elements.spinButton.classList.remove('spinning');
+                }
+                
+                this.updateDisplay();
+            }
+
+            setMessage(message) {
+                this.elements.gameMessage.textContent = message;
+            }
+
+            showResult(result, debtAmount) {
+                if (result.isDare) {
+                    this.showDare();
+                } else {
+                    this.showDebt(debtAmount, result.message);
+                }
+            }
+
+            showDebt(amount, message) {
+                this.setMessage(`${message} You owe ${amount}!`);
+                
+                // Flash the debt display
+                this.elements.debt.parentElement.style.animation = 'none';
+                setTimeout(() => {
+                    this.elements.debt.parentElement.style.animation = 'symbolPulse 1s ease-in-out';
+                }, 10);
+            }
+
+            showDare() {
+                const dare = ResultCalculator.getRandomDare();
+                this.elements.dareText.textContent = dare;
+                this.elements.dareOverlay.classList.add('active');
+                this.setMessage('Congratulations! You won a special prize!');
+            }
+
+            dismissDare() {
+                this.elements.dareOverlay.classList.remove('active');
+                this.setMessage('Hope you enjoyed your prize! Ready for another spin?');
+            }
+
+            toggleRules() {
+                this.elements.rulesPanel.classList.toggle('active');
+            }
+        }
+
+        // ===== MAIN GAME CLASS =====
+        class ReverseSlotMachine {
+            constructor() {
+                this.gameState = new GameState();
+                this.reelManager = new ReelManager();
+                this.uiManager = new UIManager(this.gameState);
+                
+                // Make game accessible globally for UI events
+                window.reverseSlotGame = this;
+            }
+
+            spin() {
+                if (!this.gameState.spin()) {
+                    this.uiManager.setMessage('Cannot spin! Need $10 to play.');
+                    return;
+                }
+
+                this.uiManager.setSpinning(true);
+                this.reelManager.clearHighlights();
+
+                this.reelManager.spin((results) => {
+                    const analysis = ResultCalculator.analyzeResult(results);
+                    
+                    if (analysis.isDare) {
+                        // Special prize - no debt, just a dare
+                        this.reelManager.highlightSymbols(analysis.positions, true);
+                        this.uiManager.showResult(analysis, 0);
+                    } else {
+                        // Normal result - add debt
+                        const debtAmount = ResultCalculator.calculateDebt(analysis.type);
+                        this.gameState.addDebt(debtAmount);
+                        
+                        if (analysis.positions.length > 0) {
+                            this.reelManager.highlightSymbols(analysis.positions, false);
+                        }
+                        
+                        this.uiManager.showResult(analysis, debtAmount);
+                    }
+                    
+                    this.uiManager.setSpinning(false);
+                    this.uiManager.updateDisplay();
+                });
+            }
+        }
+
+        // ===== GLOBAL FUNCTIONS =====
+        function toggleRules() {
+            const rulesPanel = document.getElementById('rules-panel');
+            rulesPanel.classList.toggle('active');
+        }
+
+        function dismissDare() {
+            if (window.reverseSlotGame) {
+                window.reverseSlotGame.uiManager.dismissDare();
+            }
+        }
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', () => {
+            new ReverseSlotMachine();
+        });
+    </script>
+</body>
+</html>
