@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha Casino - Premium Slot Experience</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="casino-header">
+        <h1 class="casino-logo">ALPHA CASINO</h1>
+        <p class="casino-subtitle">Premium Gaming Experience</p>
+    </header>
+
+    <main class="main-content">
+        <section class="slot-machine" id="slot-machine">
+            <div class="machine-frame">
+                <div class="reels-container" id="reels-container">
+                    <div class="reel" id="reel-1">
+                        <div class="reel-strip" data-reel="1"></div>
+                    </div>
+                    <div class="reel" id="reel-2">
+                        <div class="reel-strip" data-reel="2"></div>
+                    </div>
+                    <div class="reel" id="reel-3">
+                        <div class="reel-strip" data-reel="3"></div>
+                    </div>
+                    <div class="reel" id="reel-4">
+                        <div class="reel-strip" data-reel="4"></div>
+                    </div>
+                    <div class="reel" id="reel-5">
+                        <div class="reel-strip" data-reel="5"></div>
+                    </div>
+                </div>
+
+                <div class="win-line" id="win-line"></div>
+            </div>
+
+            <div class="game-controls">
+                <div class="balance-section">
+                    <div class="balance-display">
+                        <span class="label">Balance</span>
+                        <span class="amount" id="balance">$1,000</span>
+                    </div>
+                    <div class="bet-display">
+                        <span class="label">Bet</span>
+                        <span class="amount" id="bet-amount">$10</span>
+                    </div>
+                </div>
+
+                <div class="bet-controls">
+                    <button class="bet-btn" id="bet-decrease" aria-label="Decrease bet">-</button>
+                    <button class="bet-btn" id="bet-increase" aria-label="Increase bet">+</button>
+                    <button class="max-bet-btn" id="max-bet">MAX BET</button>
+                </div>
+
+                <button class="spin-btn" id="spin-button">
+                    <span class="spin-text">SPIN</span>
+                    <div class="spin-icon">⟲</div>
+                </button>
+            </div>
+
+            <div class="message-bar" id="message-bar">
+                <span id="game-message">Good Luck!</span>
+            </div>
+        </section>
+
+        <div class="paytable-toggle">
+            <button class="toggle-btn" id="paytable-toggle">💰 Paytable</button>
+        </div>
+
+        <div class="paytable" id="paytable">
+            <h3>Winning Combinations</h3>
+            <div class="paytable-row">
+                <span class="symbols">ΑΑΑ</span>
+                <span class="payout">1000x</span>
+            </div>
+            <div class="paytable-row">
+                <span class="symbols">👑👑👑</span>
+                <span class="payout">500x</span>
+            </div>
+            <div class="paytable-row">
+                <span class="symbols">📦📦📦</span>
+                <span class="payout">200x</span>
+            </div>
+            <div class="paytable-row">
+                <span class="symbols">💎💎💎</span>
+                <span class="payout">100x</span>
+            </div>
+            <div class="paytable-row">
+                <span class="symbols">🔷🔷🔷</span>
+                <span class="payout">50x</span>
+            </div>
+            <div class="paytable-row">
+                <span class="symbols">🔶🔶🔶</span>
+                <span class="payout">25x</span>
+            </div>
+        </div>
+    </main>
+
+    <div class="win-overlay" id="win-overlay">
+        <div class="win-content">
+            <h2 class="win-title" id="win-title">WINNER!</h2>
+            <p class="win-amount" id="win-amount">$0</p>
+        </div>
+    </div>
+
+    <div class="particle-container" id="particle-container"></div>
+
+    <footer class="casino-footer">
+        <p>&copy; 2025 Alpha Casino. Play responsibly.</p>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
