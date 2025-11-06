@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Tracker</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Stock API Integration (using Alpha Vantage - you'll need a free API key)
+        const ALPHA_VANTAGE_KEY = 'demo'; // Replace with your free API key from alphavantage.co
+        
+        const fetchStockPrice = async (symbol) => {
+            try {
+                const response = await fetch(
+                    `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${ALPHA_VANTAGE_KEY}`
+                );
+                const data = await response.json();
+                
+                if (data['Global Quote'] && data['Global Quote']['05. price']) {
+                    return parseFloat(data['Global Quote']['05. price']);
+                }
+                
+                // Fallback for demo purposes or API limit
+                console.warn(`Could not fetch price for ${symbol}, using cached/demo data`);
+                return null;
+            } catch (error) {
+                console.error('Error fetching stock price:', error);
+                return null;
+            }
+        };
+
+        const fetchStockOverview = async (symbol) => {
+            try {
+                const response = await fetch(
+                    `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${symbol}&apikey=${ALPHA_VANTAGE_KEY}`
+                );
+                const data = await response.json();
+                
+                return {
+                    sector: data.Sector || 'Unknown',
+                    dividendYield: data.DividendYield ? parseFloat(data.DividendYield) : 0,
+                    dividendPerShare: data.DividendPerShare ? parseFloat(data.DividendPerShare) : 0,
+                    exDividendDate: data.ExDividendDate || null
+                };
+            } catch (error) {
+                console.error('Error fetching stock overview:', error);
+                return { sector: 'Unknown', dividendYield: 0, dividendPerShare: 0, exDividendDate: null };
+            }
+        };
+
+        const fetchHistoricalData = async (symbol) => {
+            try {
+                const response = await fetch(
+                    `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&outputsize=full&apikey=${ALPHA_VANTAGE_KEY}`
+                );
+                const data = await response.json();
+                
+                const timeSeries = data['Time Series (Daily)'];
+                if (!timeSeries) return null;
+                
+                return timeSeries;
+            } catch (error) {
+                console.error('Error fetching historical data:', error);
+                return null;
+            }
+        };
+
+        const PortfolioTracker = () => {
+            const [holdings, setHoldings] = useState([]);
+            const [newHolding, setNewHolding] = useState({
+                symbol: '',
+                quantity: '',
+                purchasePrice: '',
+                purchaseDate: new Date().toISOString().split('T')[0]
+            });
+            const [currentPrices, setCurrentPrices] = useState({});
+            const [stockMetadata, setStockMetadata] = useState({});
+            const [portfolioHistory, setPortfolioHistory] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [activeTab, setActiveTab] = useState('overview');
+            const chartRef = useRef(null);
+            const chartInstance = useRef(null);
+            const performanceChartRef = useRef(null);
+            const performanceChartInstance = useRef(null);
+            const sectorChartRef = useRef(null);
+            const sectorChartInstance = useRef(null);
+
+            // Load holdings from localStorage on mount
+            useEffect(() => {
+                const saved = localStorage.getItem('portfolioHoldings');
+                if (saved) {
+                    setHoldings(JSON.parse(saved));
+                }
+                
+                const savedMetadata = localStorage.getItem('stockMetadata');
+                if (savedMetadata) {
+                    setStockMetadata(JSON.parse(savedMetadata));
+                }
+                
+                const savedHistory = localStorage.getItem('portfolioHistory');
+                if (savedHistory) {
+                    setPortfolioHistory(JSON.parse(savedHistory));
+                }
+            }, []);
+
+            // Save holdings to localStorage whenever they change
+            useEffect(() => {
+                if (holdings.length > 0) {
+                    localStorage.setItem('portfolioHoldings', JSON.stringify(holdings));
+                }
+            }, [holdings]);
+
+            // Save metadata to localStorage
+            useEffect(() => {
+                if (Object.keys(stockMetadata).length > 0) {
+                    localStorage.setItem('stockMetadata', JSON.stringify(stockMetadata));
+                }
+            }, [stockMetadata]);
+
+            // Save portfolio history
+            useEffect(() => {
+                if (portfolioHistory.length > 0) {
+                    localStorage.setItem('portfolioHistory', JSON.stringify(portfolioHistory));
+                }
+            }, [portfolioHistory]);
+
+            // Fetch current prices for all holdings
+            useEffect(() => {
+                const fetchPrices = async () => {
+                    if (holdings.length === 0) return;
+                    
+                    setLoading(true);
+                    const prices = {};
+                    const metadata = {};
+                    
+                    for (const holding of holdings) {
+                        if (!currentPrices[holding.symbol]) {
+                            const price = await fetchStockPrice(holding.symbol);
+                            if (price) {
+                                prices[holding.symbol] = price;
+                            }
+                            await new Promise(resolve => setTimeout(resolve, 12000));
+                        }
+                        
+                        if (!stockMetadata[holding.symbol]) {
+                            const overview = await fetchStockOverview(holding.symbol);
+                            metadata[holding.symbol] = overview;
+                            await new Promise(resolve => setTimeout(resolve, 12000));
+                        }
+                    }
+                    
+                    setCurrentPrices(prev => ({ ...prev, ...prices }));
+                    setStockMetadata(prev => ({ ...prev, ...metadata }));
+                    setLoading(false);
+                };
+
+                fetchPrices();
+            }, [holdings]);
+
+            const addHolding = () => {
+                if (newHolding.symbol && newHolding.quantity && newHolding.purchasePrice) {
+                    setHoldings([
+                        ...holdings,
+                        {
+                            id: Date.now(),
+                            symbol: newHolding.symbol.toUpperCase(),
+                            quantity: parseFloat(newHolding.quantity),
+                            purchasePrice: parseFloat(newHolding.purchasePrice),
+                            purchaseDate: newHolding.purchaseDate
+                        }
+                    ]);
+                    setNewHolding({
+                        symbol: '',
+                        quantity: '',
+                        purchasePrice: '',
+                        purchaseDate: new Date().toISOString().split('T')[0]
+                    });
+                }
+            };
+
+            const removeHolding = (id) => {
+                setHoldings(holdings.filter(h => h.id !== id));
+            };
+
+            const refreshPrices = async () => {
+                setLoading(true);
+                const prices = {};
+                const metadata = {};
+                
+                for (const holding of holdings) {
+                    const price = await fetchStockPrice(holding.symbol);
+                    if (price) {
+                        prices[holding.symbol] = price;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 12000));
+                    
+                    if (!stockMetadata[holding.symbol]) {
+                        const overview = await fetchStockOverview(holding.symbol);
+                        metadata[holding.symbol] = overview;
+                        await new Promise(resolve => setTimeout(resolve, 12000));
+                    }
+                }
+                
+                setCurrentPrices(prices);
+                setStockMetadata(prev => ({ ...prev, ...metadata }));
+                
+                // Record portfolio value in history
+                const totalValue = holdings.reduce((sum, holding) => {
+                    const currentPrice = prices[holding.symbol] || holding.purchasePrice;
+                    return sum + (holding.quantity * currentPrice);
+                }, 0);
+                
+                const newHistoryEntry = {
+                    date: new Date().toISOString(),
+                    value: totalValue
+                };
+                
+                setPortfolioHistory(prev => {
+                    const updated = [...prev, newHistoryEntry];
+                    // Keep last 365 days
+                    return updated.slice(-365);
+                });
+                
+                setLoading(false);
+            };
+
+            // Calculate portfolio metrics
+            const calculateMetrics = () => {
+                let totalInvested = 0;
+                let totalCurrent = 0;
+                let annualDividends = 0;
+                const sectorAllocation = {};
+                
+                holdings.forEach(holding => {
+                    const invested = holding.quantity * holding.purchasePrice;
+                    totalInvested += invested;
+                    
+                    const currentPrice = currentPrices[holding.symbol] || holding.purchasePrice;
+                    const currentValue = holding.quantity * currentPrice;
+                    totalCurrent += currentValue;
+                    
+                    // Calculate dividends
+                    const metadata = stockMetadata[holding.symbol];
+                    if (metadata && metadata.dividendPerShare) {
+                        annualDividends += holding.quantity * metadata.dividendPerShare;
+                    }
+                    
+                    // Sector allocation
+                    const sector = metadata?.sector || 'Unknown';
+                    sectorAllocation[sector] = (sectorAllocation[sector] || 0) + currentValue;
+                });
+
+                const totalGainLoss = totalCurrent - totalInvested;
+                const percentageChange = totalInvested > 0 
+                    ? ((totalCurrent - totalInvested) / totalInvested) * 100 
+                    : 0;
+                const dividendYield = totalCurrent > 0 ? (annualDividends / totalCurrent) * 100 : 0;
+
+                return {
+                    totalInvested,
+                    totalCurrent,
+                    totalGainLoss,
+                    percentageChange,
+                    annualDividends,
+                    dividendYield,
+                    sectorAllocation
+                };
+            };
+
+            const metrics = calculateMetrics();
+
+            // Generate chart
+            useEffect(() => {
+                if (chartRef.current && holdings.length > 0) {
+                    const ctx = chartRef.current.getContext('2d');
+                    
+                    if (chartInstance.current) {
+                        chartInstance.current.destroy();
+                    }
+
+                    const labels = holdings.map(h => h.symbol);
+                    const values = holdings.map(h => {
+                        const currentPrice = currentPrices[h.symbol] || h.purchasePrice;
+                        return h.quantity * currentPrice;
+                    });
+
+                    chartInstance.current = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: values,
+                                backgroundColor: [
+                                    '#3B82F6', '#10B981', '#F59E0B', '#EF4444', 
+                                    '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'
+                                ],
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Portfolio Allocation'
+                                }
+                            }
+                        }
+                    });
+                }
+
+                return () => {
+                    if (chartInstance.current) {
+                        chartInstance.current.destroy();
+                    }
+                };
+            }, [holdings, currentPrices]);
+
+            // Performance history chart
+            useEffect(() => {
+                if (performanceChartRef.current && portfolioHistory.length > 0) {
+                    const ctx = performanceChartRef.current.getContext('2d');
+                    
+                    if (performanceChartInstance.current) {
+                        performanceChartInstance.current.destroy();
+                    }
+
+                    const sortedHistory = [...portfolioHistory].sort((a, b) => 
+                        new Date(a.date) - new Date(b.date)
+                    );
+
+                    performanceChartInstance.current = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: sortedHistory.map(h => new Date(h.date).toLocaleDateString()),
+                            datasets: [{
+                                label: 'Portfolio Value',
+                                data: sortedHistory.map(h => h.value),
+                                borderColor: '#3B82F6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Portfolio Performance Over Time'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: false,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return '$' + value.toLocaleString();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                return () => {
+                    if (performanceChartInstance.current) {
+                        performanceChartInstance.current.destroy();
+                    }
+                };
+            }, [portfolioHistory]);
+
+            // Sector breakdown chart
+            useEffect(() => {
+                if (sectorChartRef.current && Object.keys(metrics.sectorAllocation).length > 0) {
+                    const ctx = sectorChartRef.current.getContext('2d');
+                    
+                    if (sectorChartInstance.current) {
+                        sectorChartInstance.current.destroy();
+                    }
+
+                    const sectors = Object.keys(metrics.sectorAllocation);
+                    const values = Object.values(metrics.sectorAllocation);
+
+                    sectorChartInstance.current = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: sectors,
+                            datasets: [{
+                                label: 'Value',
+                                data: values,
+                                backgroundColor: '#10B981'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Portfolio by Sector'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return '$' + value.toLocaleString();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                return () => {
+                    if (sectorChartInstance.current) {
+                        sectorChartInstance.current.destroy();
+                    }
+                };
+            }, [metrics.sectorAllocation]);
+
+            const generateMonthlyReport = () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                const reportDate = new Date().toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long' 
+                });
+
+                // Title
+                doc.setFontSize(20);
+                doc.text('Portfolio Performance Report', 20, 20);
+                doc.setFontSize(12);
+                doc.text(reportDate, 20, 30);
+
+                // Summary Metrics
+                doc.setFontSize(14);
+                doc.text('Portfolio Summary', 20, 45);
+                doc.setFontSize(11);
+                doc.text(`Total Invested: $${metrics.totalInvested.toFixed(2)}`, 20, 55);
+                doc.text(`Current Value: $${metrics.totalCurrent.toFixed(2)}`, 20, 62);
+                doc.text(`Total Gain/Loss: $${metrics.totalGainLoss.toFixed(2)}`, 20, 69);
+                doc.text(`Percentage Change: ${metrics.percentageChange.toFixed(2)}%`, 20, 76);
+                doc.text(`Annual Dividends: $${metrics.annualDividends.toFixed(2)}`, 20, 83);
+                doc.text(`Dividend Yield: ${metrics.dividendYield.toFixed(2)}%`, 20, 90);
+
+                // Sector Breakdown
+                doc.setFontSize(14);
+                doc.text('Sector Allocation', 20, 105);
+                doc.setFontSize(10);
+                let yPos = 115;
+                Object.entries(metrics.sectorAllocation).forEach(([sector, value]) => {
+                    const percentage = ((value / metrics.totalCurrent) * 100).toFixed(1);
+                    doc.text(`${sector}: $${value.toFixed(2)} (${percentage}%)`, 20, yPos);
+                    yPos += 7;
+                });
+
+                // Holdings Details
+                yPos += 10;
+                doc.setFontSize(14);
+                doc.text('Holdings', 20, yPos);
+                doc.setFontSize(10);
+                yPos += 10;
+                
+                holdings.forEach((holding, index) => {
+                    const currentPrice = currentPrices[holding.symbol] || holding.purchasePrice;
+                    const currentValue = holding.quantity * currentPrice;
+                    const invested = holding.quantity * holding.purchasePrice;
+                    const gainLoss = currentValue - invested;
+                    const gainLossPercent = ((gainLoss / invested) * 100).toFixed(2);
+                    const metadata = stockMetadata[holding.symbol];
+                    const annualDividend = metadata?.dividendPerShare ? (holding.quantity * metadata.dividendPerShare).toFixed(2) : '0.00';
+
+                    doc.text(`${index + 1}. ${holding.symbol} (${metadata?.sector || 'Unknown'})`, 20, yPos);
+                    doc.text(`Shares: ${holding.quantity} | Purchase: $${holding.purchasePrice.toFixed(2)}`, 30, yPos + 5);
+                    doc.text(`Current: $${currentPrice.toFixed(2)} | Value: $${currentValue.toFixed(2)}`, 30, yPos + 10);
+                    doc.text(`Gain/Loss: $${gainLoss.toFixed(2)} (${gainLossPercent}%)`, 30, yPos + 15);
+                    doc.text(`Annual Dividend: $${annualDividend}`, 30, yPos + 20);
+                    
+                    yPos += 30;
+                    
+                    if (yPos > 260) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                });
+
+                doc.save(`portfolio-report-${new Date().toISOString().split('T')[0]}.pdf`);
+            };
+
+            return (
+                <div className="min-h-screen p-8">
+                    <div className="max-w-7xl mx-auto">
+                        <header className="mb-8">
+                            <h1 className="text-4xl font-bold text-gray-800 mb-2">Portfolio Tracker</h1>
+                            <p className="text-gray-600">Track your investment performance over time</p>
+                        </header>
+
+                        {/* Portfolio Summary Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <p className="text-gray-500 text-sm mb-1">Total Invested</p>
+                                <p className="text-2xl font-bold text-gray-800">
+                                    ${metrics.totalInvested.toFixed(2)}
+                                </p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <p className="text-gray-500 text-sm mb-1">Current Value</p>
+                                <p className="text-2xl font-bold text-gray-800">
+                                    ${metrics.totalCurrent.toFixed(2)}
+                                </p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <p className="text-gray-500 text-sm mb-1">Total Gain/Loss</p>
+                                <p className={`text-2xl font-bold ${metrics.totalGainLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    ${metrics.totalGainLoss.toFixed(2)}
+                                </p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <p className="text-gray-500 text-sm mb-1">Return %</p>
+                                <p className={`text-2xl font-bold ${metrics.percentageChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    {metrics.percentageChange.toFixed(2)}%
+                                </p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <p className="text-gray-500 text-sm mb-1">Annual Dividends</p>
+                                <p className="text-2xl font-bold text-blue-600">
+                                    ${metrics.annualDividends.toFixed(2)}
+                                </p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <p className="text-gray-500 text-sm mb-1">Dividend Yield</p>
+                                <p className="text-2xl font-bold text-blue-600">
+                                    {metrics.dividendYield.toFixed(2)}%
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Tab Navigation */}
+                        <div className="bg-white rounded-lg shadow mb-8">
+                            <div className="flex border-b">
+                                <button
+                                    onClick={() => setActiveTab('overview')}
+                                    className={`px-6 py-3 font-medium ${activeTab === 'overview' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
+                                >
+                                    Overview
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('performance')}
+                                    className={`px-6 py-3 font-medium ${activeTab === 'performance' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
+                                >
+                                    Performance History
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('sectors')}
+                                    className={`px-6 py-3 font-medium ${activeTab === 'sectors' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
+                                >
+                                    Sector Breakdown
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('dividends')}
+                                    className={`px-6 py-3 font-medium ${activeTab === 'dividends' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}
+                                >
+                                    Dividends
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Overview Tab */}
+                        {activeTab === 'overview' && (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                            {/* Add Holding Form */}
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <h2 className="text-xl font-semibold mb-4">Add Holding</h2>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Stock Symbol
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="AAPL"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                            value={newHolding.symbol}
+                                            onChange={(e) => setNewHolding({...newHolding, symbol: e.target.value})}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Quantity
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="10"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                            value={newHolding.quantity}
+                                            onChange={(e) => setNewHolding({...newHolding, quantity: e.target.value})}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Purchase Price
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="150.00"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                            value={newHolding.purchasePrice}
+                                            onChange={(e) => setNewHolding({...newHolding, purchasePrice: e.target.value})}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Purchase Date
+                                        </label>
+                                        <input
+                                            type="date"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                            value={newHolding.purchaseDate}
+                                            onChange={(e) => setNewHolding({...newHolding, purchaseDate: e.target.value})}
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={addHolding}
+                                        className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
+                                    >
+                                        Add Holding
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Chart */}
+                            <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
+                                <h2 className="text-xl font-semibold mb-4">Portfolio Allocation</h2>
+                                {holdings.length > 0 ? (
+                                    <canvas ref={chartRef}></canvas>
+                                ) : (
+                                    <div className="flex items-center justify-center h-64 text-gray-400">
+                                        Add holdings to see your portfolio allocation
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        )}
+
+                        {/* Performance Tab */}
+                        {activeTab === 'performance' && (
+                            <div className="bg-white rounded-lg shadow p-6 mb-8">
+                                <h2 className="text-xl font-semibold mb-4">Historical Performance</h2>
+                                {portfolioHistory.length > 0 ? (
+                                    <canvas ref={performanceChartRef}></canvas>
+                                ) : (
+                                    <div className="flex items-center justify-center h-64 text-gray-400">
+                                        Historical data will appear after refreshing prices over time
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Sectors Tab */}
+                        {activeTab === 'sectors' && (
+                            <div className="bg-white rounded-lg shadow p-6 mb-8">
+                                <h2 className="text-xl font-semibold mb-4">Sector Distribution</h2>
+                                {Object.keys(metrics.sectorAllocation).length > 0 ? (
+                                    <div>
+                                        <canvas ref={sectorChartRef}></canvas>
+                                        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {Object.entries(metrics.sectorAllocation).map(([sector, value]) => {
+                                                const percentage = ((value / metrics.totalCurrent) * 100).toFixed(1);
+                                                return (
+                                                    <div key={sector} className="bg-gray-50 p-4 rounded-lg">
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="font-medium">{sector}</span>
+                                                            <span className="text-gray-600">{percentage}%</span>
+                                                        </div>
+                                                        <div className="text-lg font-bold text-gray-800 mt-1">
+                                                            ${value.toFixed(2)}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center h-64 text-gray-400">
+                                        Add holdings and refresh prices to see sector breakdown
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Dividends Tab */}
+                        {activeTab === 'dividends' && (
+                            <div className="bg-white rounded-lg shadow p-6 mb-8">
+                                <h2 className="text-xl font-semibold mb-4">Dividend Information</h2>
+                                {holdings.length > 0 ? (
+                                    <div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                            <div className="bg-blue-50 p-4 rounded-lg">
+                                                <p className="text-sm text-gray-600 mb-1">Total Annual Dividends</p>
+                                                <p className="text-2xl font-bold text-blue-600">
+                                                    ${metrics.annualDividends.toFixed(2)}
+                                                </p>
+                                            </div>
+                                            <div className="bg-blue-50 p-4 rounded-lg">
+                                                <p className="text-sm text-gray-600 mb-1">Portfolio Dividend Yield</p>
+                                                <p className="text-2xl font-bold text-blue-600">
+                                                    {metrics.dividendYield.toFixed(2)}%
+                                                </p>
+                                            </div>
+                                            <div className="bg-blue-50 p-4 rounded-lg">
+                                                <p className="text-sm text-gray-600 mb-1">Monthly Income (Est.)</p>
+                                                <p className="text-2xl font-bold text-blue-600">
+                                                    ${(metrics.annualDividends / 12).toFixed(2)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <table className="w-full">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Symbol</th>
+                                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Shares</th>
+                                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Dividend/Share</th>
+                                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Annual Income</th>
+                                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Yield</th>
+                                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Ex-Dividend Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-200">
+                                                {holdings.map(holding => {
+                                                    const metadata = stockMetadata[holding.symbol];
+                                                    const annualIncome = metadata?.dividendPerShare ? holding.quantity * metadata.dividendPerShare : 0;
+                                                    
+                                                    return (
+                                                        <tr key={holding.id}>
+                                                            <td className="px-4 py-3 font-medium">{holding.symbol}</td>
+                                                            <td className="px-4 py-3">{holding.quantity}</td>
+                                                            <td className="px-4 py-3">
+                                                                ${(metadata?.dividendPerShare || 0).toFixed(2)}
+                                                            </td>
+                                                            <td className="px-4 py-3 font-medium text-green-600">
+                                                                ${annualIncome.toFixed(2)}
+                                                            </td>
+                                                            <td className="px-4 py-3">
+                                                                {metadata?.dividendYield ? (metadata.dividendYield * 100).toFixed(2) : '0.00'}%
+                                                            </td>
+                                                            <td className="px-4 py-3">
+                                                                {metadata?.exDividendDate || 'N/A'}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center h-64 text-gray-400">
+                                        Add holdings to see dividend information
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Holdings Table */}
+                        <div className="bg-white rounded-lg shadow p-6 mb-8">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-semibold">Current Holdings</h2>
+                                <div className="space-x-2">
+                                    <button
+                                        onClick={refreshPrices}
+                                        disabled={loading || holdings.length === 0}
+                                        className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 disabled:opacity-50"
+                                    >
+                                        {loading ? 'Updating...' : 'Refresh Prices'}
+                                    </button>
+                                    <button
+                                        onClick={generateMonthlyReport}
+                                        disabled={holdings.length === 0}
+                                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50"
+                                    >
+                                        Generate Report
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            {holdings.length === 0 ? (
+                                <div className="text-center py-8 text-gray-400">
+                                    No holdings yet. Add your first holding to get started!
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Symbol</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Sector</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Quantity</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Purchase Price</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Current Price</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Total Value</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Gain/Loss</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Annual Dividend</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Purchase Date</th>
+                                                <th className="px-4 py-3"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-200">
+                                            {holdings.map(holding => {
+                                                const currentPrice = currentPrices[holding.symbol] || holding.purchasePrice;
+                                                const currentValue = holding.quantity * currentPrice;
+                                                const invested = holding.quantity * holding.purchasePrice;
+                                                const gainLoss = currentValue - invested;
+                                                const gainLossPercent = ((gainLoss / invested) * 100).toFixed(2);
+                                                const metadata = stockMetadata[holding.symbol];
+                                                const annualDividend = metadata?.dividendPerShare ? holding.quantity * metadata.dividendPerShare : 0;
+
+                                                return (
+                                                    <tr key={holding.id} className="hover:bg-gray-50">
+                                                        <td className="px-4 py-3 font-medium">{holding.symbol}</td>
+                                                        <td className="px-4 py-3 text-sm text-gray-600">
+                                                            {metadata?.sector || 'Loading...'}
+                                                        </td>
+                                                        <td className="px-4 py-3">{holding.quantity}</td>
+                                                        <td className="px-4 py-3">${holding.purchasePrice.toFixed(2)}</td>
+                                                        <td className="px-4 py-3">
+                                                            ${currentPrice.toFixed(2)}
+                                                            {!currentPrices[holding.symbol] && (
+                                                                <span className="text-xs text-gray-400 ml-1">(est.)</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-4 py-3">${currentValue.toFixed(2)}</td>
+                                                        <td className="px-4 py-3">
+                                                            <span className={gainLoss >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                                                ${gainLoss.toFixed(2)} ({gainLossPercent}%)
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-blue-600">
+                                                            ${annualDividend.toFixed(2)}
+                                                        </td>
+                                                        <td className="px-4 py-3">{holding.purchaseDate}</td>
+                                                        <td className="px-4 py-3">
+                                                            <button
+                                                                onClick={() => removeHolding(holding.id)}
+                                                                className="text-red-600 hover:text-red-800"
+                                                            >
+                                                                Remove
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Instructions */}
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                            <h3 className="font-semibold text-blue-900 mb-2">Getting Started</h3>
+                            <ol className="list-decimal list-inside space-y-1 text-sm text-blue-800">
+                                <li>Get a free API key from <a href="https://www.alphavantage.co/support/#api-key" target="_blank" className="underline">Alpha Vantage</a></li>
+                                <li>Replace 'demo' in the code with your API key (line 26)</li>
+                                <li>Add your stock holdings using the form on the Overview tab</li>
+                                <li>Click "Refresh Prices" to fetch current market prices and metadata (note: free tier has rate limits)</li>
+                                <li>View different analytics: Overview, Performance History, Sector Breakdown, and Dividends</li>
+                                <li>Portfolio history is recorded each time you refresh prices - track performance over time!</li>
+                                <li>Generate comprehensive monthly PDF reports with all metrics</li>
+                                <li>All data is saved locally in your browser</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<PortfolioTracker />, document.getElementById('root'));
+    </script>
+</body>
+</html>
